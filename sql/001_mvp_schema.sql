@@ -167,6 +167,7 @@ despesas as (
     )::numeric(16,2) as total_despesas
   from public.prestacao_contas pc
   where pc.candidato_id is not null
+    and pc.valor > 0
   group by pc.candidato_id
 )
 select
