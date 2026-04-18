@@ -264,7 +264,7 @@ Indicadores:
 - Deve ser facil alternar entre cargo estadual e federal.
 - Deve permitir drill-down de regiao para cidade e de cidade para secao.
 - Deve deixar claro quando um dado financeiro e declarado e nao territorial.
-- Deve permitir exportar tabelas ou copiar resultados, se possivel.
+- Deve permitir exportar tabelas em .csv.
 
 ## Decisoes Pendentes
 
