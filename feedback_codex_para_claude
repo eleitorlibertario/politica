@@ -1,0 +1,118 @@
+﻿# Feedback Codex para Claude
+
+Data da análise: 2026-04-18
+Repositório: C:\Users\Usuario\Desktop\Antigravity\mcp_br
+
+## Resumo geral
+
+O projeto está mais avançado do que a documentação principal indica. Já existe pipeline ETL funcional (PowerShell + Node.js + SQL) para carregar dados do TSE no Supabase/Postgres, com:
+
+- schema MVP
+- camada de staging
+- carga de dimensões
+- carga de fatos
+- consultas de validação
+
+Há boa estrutura de diretórios, documentação extensa e scripts operacionais claros.
+
+## O que foi identificado
+
+### 1) Inconsistência entre documentação e estado real do projeto
+
+A documentação principal afirma que o projeto está apenas em fase de documentação e sem implementação, mas o repositório já possui SQL e scripts implementados.
+
+Evidências:
+- README.md: seção “Ainda nao foram implementados”
+- docs/README.md: seção “Somente documentacao foi criada” / “Ainda nao foram criados”
+- docs/proximos-passos-retomada.md: já descreve schema/staging/scripts/carga como existentes
+
+Impacto:
+- Gera confusão sobre maturidade real do projeto
+- Pode levar a decisões erradas de priorização
+
+### 2) Parsing de CSV potencialmente frágil no loader de staging
+
+No script de carga de staging, o parsing da linha CSV é feito com split simples por ponto-e-vírgula.
+
+Evidência:
+- scripts/009_load_staging.js: `parseRow(raw) { return raw.split(';') ... }`
+
+Risco:
+- Se houver `;` dentro de campo entre aspas (situação comum em descrições), as colunas podem desalinha
+- Isso pode contaminar dados de staging silenciosamente
+
+Impacto potencial:
+- dados incorretos em staging
+- erro de mapeamento para dimensões/fatos
+- perda de confiança em métricas analíticas
+
+### 3) Inconsistência de parsing de data entre SQL e script Node
+
+Na carga de prestação de contas:
+- Em SQL de fatos, há cast direto para date
+- No script Node, há parsing explícito para formato `DD/MM/YYYY`
+
+Evidências:
+- sql/004_load_facts.sql: `nullif(trim(pc.data_lancamento), '')::date`
+- scripts/010_load_dimensions_facts.js: `to_date(..., 'DD/MM/YYYY')`
+
+Risco:
+- Caminho SQL pode falhar com datas em formato brasileiro
+- Caminho Node pode funcionar para o mesmo dado
+- comportamentos divergentes conforme estratégia de execução
+
+### 4) Ausência de testes automatizados
+
+`npm test` está como placeholder e retorna erro sempre.
+
+Evidência:
+- package.json: script test = `echo "Error: no test specified" && exit 1`
+
+Impacto:
+- sem proteção contra regressões no pipeline
+- mudanças em SQL/scripts podem quebrar carga sem alerta antecipado
+
+### 5) Rastreabilidade parcial no log de script auxiliar
+
+No script auxiliar de carga de prestação de contas, o `import_logs.fonte` aponta para outro arquivo.
+
+Evidência:
+- scripts/010b_load_prestacao_contas.js grava fonte como `scripts/010_load_dimensions_facts.js`
+
+Impacto:
+- auditoria/observabilidade da execução fica imprecisa
+
+### 6) Situação do workspace Git
+
+Existia alteração local não relacionada à análise:
+- `.claude/settings.local.json` marcado como modificado
+
+Observação:
+- não foi alterado durante esta análise
+- não foi revertido
+
+## Pontos positivos percebidos
+
+- Arquitetura por camadas está coerente (staging -> dimensões/fatos -> views)
+- SQL de validação (`005_validacoes_v2.sql`) é pragmático e acionável
+- Scripts operacionais de download/extração simplificam onboarding
+- Uso de filtros de escopo (SC/2022/cargos alvo) está consistente no ETL
+
+## Comandos/checagens executados na análise
+
+- Listagem de estrutura e arquivos
+- Leitura de arquivos principais (`README`, docs, SQL e scripts)
+- `node --check` em scripts JS de carga
+- `npm test` (falhou por placeholder esperado)
+- `git status --short`
+- buscas pontuais com `rg` para localizar evidências
+
+## Conclusão
+
+O projeto já tem base técnica concreta para carga e análise, mas há riscos de confiabilidade e governança documental. As prioridades de correção, em ordem, são:
+
+1. tornar o parsing CSV robusto
+2. unificar/paralisar regra de parsing de data/valor entre SQL e Node
+3. atualizar documentação de estado atual
+4. criar testes mínimos de regressão do pipeline
+5. corrigir metadado de `fonte` no script auxiliar

@@ -34,7 +34,23 @@ function cargoMatch(cargo) {
 }
 
 function parseRow(raw) {
-  return raw.split(';').map(c => c.replace(/^"|"$/g, '').trim());
+  const cols = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (inQuotes) {
+      if (ch === '"' && raw[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { field += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ';') { cols.push(field.trim()); field = ''; }
+      else { field += ch; }
+    }
+  }
+  cols.push(field.trim());
+  return cols;
 }
 
 function col(headers, cols, name) {

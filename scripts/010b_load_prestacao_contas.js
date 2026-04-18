@@ -88,7 +88,7 @@ async function main() {
 
   await run('import_log', `
     insert into public.import_logs (fonte, arquivo, status, mensagem)
-    values ('scripts/010_load_dimensions_facts.js', null, 'ok', 'Dimensoes e fatos carregados')
+    values ('scripts/010b_load_prestacao_contas.js', null, 'ok', 'Prestacao de contas carregada')
   `);
 
   console.log('\n=== Totais finais ===');

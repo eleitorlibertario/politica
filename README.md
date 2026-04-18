@@ -22,16 +22,19 @@ Comece por:
 
 ## Estado Atual
 
-O projeto ainda esta em fase de documentacao e planejamento.
+Pipeline de carga completo. Dados SC 2022 carregados no Supabase.
 
-Ainda nao foram implementados:
+Implementado:
 
-- schema SQL;
-- scripts de ingestao;
-- dashboard;
-- conexao com Supabase;
-- MCP proprio;
-- importacao de dados do TSE.
+- schema SQL (staging + publico);
+- scripts de ingestao (download, extracao, staging, dimensoes, fatos);
+- conexao com Supabase/Postgres via Node.js + pg;
+- importacao de dados do TSE (candidatos, votacao por municipio, prestacao de contas).
+
+Pendente:
+
+- dashboard Metabase;
+- MCP proprio.
 
 ## Escopo Inicial
 

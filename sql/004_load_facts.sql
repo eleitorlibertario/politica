@@ -229,7 +229,9 @@ with base as (
     nullif(trim(pc.descricao), '') as descricao,
     nullif(trim(pc.fornecedor_ou_doador), '') as fornecedor_ou_doador,
     nullif(trim(pc.documento_fornecedor_ou_doador), '') as documento_fornecedor_ou_doador,
-    nullif(trim(pc.data_lancamento), '')::date as data_lancamento,
+    case when nullif(trim(pc.data_lancamento), '') ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'
+         then to_date(trim(pc.data_lancamento), 'DD/MM/YYYY')
+         else null end                                              as data_lancamento,
     nullif(
       replace(
         replace(

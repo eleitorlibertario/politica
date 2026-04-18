@@ -178,14 +178,17 @@ Checkpoint do estado atual e checklist objetivo para continuar o trabalho em out
 
 ## Estado Atual
 
-Somente documentacao foi criada.
+Pipeline de carga completo. Dados SC 2022 carregados no Supabase.
 
-Ainda nao foram criados:
+Implementado:
 
-- schema SQL;
-- scripts de ingestao;
-- conexao com Supabase;
-- dashboard;
-- MCP proprio;
+- schema SQL (staging + publico);
+- scripts de ingestao (download, extracao, staging, dimensoes, fatos);
+- conexao com Supabase/Postgres via Node.js + pg;
 - importacao da planilha de regioes;
-- download de dados do TSE.
+- download e carga de dados do TSE.
+
+Pendente:
+
+- dashboard Metabase;
+- MCP proprio.
