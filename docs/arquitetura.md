@@ -11,7 +11,8 @@ O foco e organizar os dados em uma base Supabase e disponibilizar um dashboard e
 ```text
 Fontes de dados
   - TSE
-  - planilha propria de regioes
+  - planilha propria de regioes - documento inputs/cidade_regiao.csv
+  
 
 Camada de ingestao
   - baixar ou receber arquivos

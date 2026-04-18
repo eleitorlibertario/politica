@@ -121,6 +121,7 @@ Cards:
 - custo por voto agregado;
 - melhor regiao;
 - melhor municipio.
+- dividir total de votos do partido pela quantidade de candidatos para ter uma ideia de quantos votos cada candidato teve em media.
 
 Visualizacoes:
 
