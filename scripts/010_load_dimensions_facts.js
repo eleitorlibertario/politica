@@ -28,37 +28,44 @@ async function run(label, sql) {
 
 async function main() {
   await client.connect();
+  // Desabilita timeout no servidor (Supabase tem default que mata queries longas)
+  await client.query('SET statement_timeout = 0');
+  await client.query('SET lock_timeout = 0');
   console.log('Conectado.\n=== Carga dimensoes e fatos ===\n');
 
   // -------------------------------------------------------------------------
   // DIMENSOES
   // -------------------------------------------------------------------------
 
-  await run('municipios_sc', `
-    with regiao_map as (
+  // Passo 1: insere municipios com regiao fallback (query simples, sem normalize_txt em massa)
+  await run('municipios_sc — insert base', `
+    insert into public.municipios_sc (codigo_tse, codigo_ibge, nome, uf, regiao_id)
+    select distinct
+      nullif(trim(vm.codigo_municipio_tse),'')::integer as codigo_tse,
+      null::integer,
+      trim(vm.municipio) as nome,
+      'SC',
+      (select id from public.regioes_sc where nome = 'SEM REGIAO' limit 1)
+    from staging.stg_votacao_municipio vm
+    where coalesce(trim(vm.ano),'') = '2022'
+      and upper(coalesce(trim(vm.uf),'')) = 'SC'
+      and upper(coalesce(trim(vm.cargo),'')) in ('DEPUTADO ESTADUAL','DEPUTADO FEDERAL')
+      and nullif(trim(vm.codigo_municipio_tse),'') is not null
+    on conflict (codigo_tse) do update set nome = excluded.nome
+  `);
+
+  // Passo 2: atualiza regiao usando mapeamento da planilha (sobre poucos municipios)
+  await run('municipios_sc — atualiza regioes', `
+    update public.municipios_sc m
+    set regiao_id = r.id
+    from (
       select normalize_txt(cidade) as cidade_norm, min(trim(regiao)) as regiao
       from staging.stg_regioes
       where coalesce(trim(cidade),'') <> '' and coalesce(trim(regiao),'') <> ''
       group by normalize_txt(cidade)
-    ),
-    base as (
-      select
-        nullif(trim(vm.codigo_municipio_tse),'')::integer as codigo_tse,
-        min(trim(vm.municipio)) as nome,
-        min(coalesce(rm.regiao,'SEM REGIAO')) as regiao_nome
-      from staging.stg_votacao_municipio vm
-      left join regiao_map rm on rm.cidade_norm = normalize_txt(vm.municipio)
-      where coalesce(trim(vm.ano),'') = '2022'
-        and upper(coalesce(trim(vm.uf),'')) = 'SC'
-        and upper(coalesce(trim(vm.cargo),'')) in ('DEPUTADO ESTADUAL','DEPUTADO FEDERAL')
-        and nullif(trim(vm.codigo_municipio_tse),'') is not null
-      group by nullif(trim(vm.codigo_municipio_tse),'')::integer
-    )
-    insert into public.municipios_sc (codigo_tse, codigo_ibge, nome, uf, regiao_id)
-    select b.codigo_tse, null::integer, b.nome, 'SC', r.id
-    from base b
-    join public.regioes_sc r on r.nome = b.regiao_nome
-    on conflict (codigo_tse) do update set nome = excluded.nome, regiao_id = excluded.regiao_id
+    ) rm
+    join public.regioes_sc r on r.nome = rm.regiao
+    where normalize_txt(m.nome) = rm.cidade_norm
   `);
 
   await run('partidos', `
@@ -81,19 +88,19 @@ async function main() {
       partido_id, sigla_partido, federacao_coligacao,
       situacao_candidatura, situacao_totalizacao, identificador_tse
     )
-    select
-      nullif(trim(sc.ano),'')::integer,
-      coalesce(nullif(trim(sc.turno),'')::integer, 1),
-      upper(trim(sc.cargo)),
-      nullif(trim(sc.numero),'')::integer,
-      trim(sc.nome_urna),
-      nullif(trim(sc.nome_completo),''),
-      p.id,
-      upper(trim(sc.sigla_partido)),
-      nullif(trim(sc.federacao_coligacao),''),
-      nullif(trim(sc.situacao_candidatura),''),
-      nullif(trim(sc.situacao_totalizacao),''),
-      nullif(trim(sc.identificador_tse),'')
+    select distinct on (ano, turno, cargo, numero, sigla_partido)
+      nullif(trim(sc.ano),'')::integer                        as ano,
+      coalesce(nullif(trim(sc.turno),'')::integer, 1)         as turno,
+      upper(trim(sc.cargo))                                    as cargo,
+      nullif(trim(sc.numero),'')::integer                     as numero,
+      trim(sc.nome_urna)                                       as nome_urna,
+      nullif(trim(sc.nome_completo),'')                        as nome_completo,
+      p.id                                                     as partido_id,
+      upper(trim(sc.sigla_partido))                            as sigla_partido,
+      nullif(trim(sc.federacao_coligacao),'')                  as federacao_coligacao,
+      nullif(trim(sc.situacao_candidatura),'')                 as situacao_candidatura,
+      nullif(trim(sc.situacao_totalizacao),'')                 as situacao_totalizacao,
+      nullif(trim(sc.identificador_tse),'')                    as identificador_tse
     from staging.stg_candidatos sc
     left join public.partidos p
       on p.ano = nullif(trim(sc.ano),'')::integer
@@ -104,6 +111,7 @@ async function main() {
       and coalesce(trim(sc.numero),'') <> ''
       and coalesce(trim(sc.nome_urna),'') <> ''
       and coalesce(trim(sc.sigla_partido),'') <> ''
+    order by ano, turno, cargo, numero, sigla_partido
     on conflict (ano, turno, cargo, numero, sigla_partido) do update set
       nome_urna           = excluded.nome_urna,
       nome_completo       = coalesce(excluded.nome_completo, public.candidatos.nome_completo),
@@ -118,43 +126,29 @@ async function main() {
   // FATOS
   // -------------------------------------------------------------------------
 
-  await run('votacao_municipio (resolve + agrega por municipio)', `
+  // Join direto por ID — evita normalize_txt em massa que trava o servidor
+  await run('votacao_municipio', `
     insert into public.votacao_municipio (ano, turno, cargo, candidato_id, municipio_id, votos)
-    with base as (
-      select
-        nullif(trim(vm.ano),'')::integer                                         as ano,
-        coalesce(nullif(trim(vm.turno),'')::integer, 1)                          as turno,
-        upper(trim(vm.cargo))                                                     as cargo,
-        nullif(trim(vm.codigo_municipio_tse),'')::integer                        as codigo_tse,
-        vm.municipio                                                              as municipio_nome,
-        nullif(trim(vm.numero_candidato),'')::integer                            as numero_candidato,
-        upper(trim(vm.sigla_partido))                                             as sigla_partido,
-        nullif(trim(vm.identificador_tse),'')                                    as identificador_tse,
-        nullif(regexp_replace(coalesce(vm.votos,''),'[^0-9-]+','','g'),'')::integer as votos
-      from staging.stg_votacao_municipio vm
-      where coalesce(trim(vm.ano),'') = '2022'
-        and upper(coalesce(trim(vm.uf),'')) = 'SC'
-        and upper(coalesce(trim(vm.cargo),'')) in ('DEPUTADO ESTADUAL','DEPUTADO FEDERAL')
-    ),
-    resolved as (
-      select
-        b.ano, b.turno, b.cargo, b.votos,
-        m.id as municipio_id,
-        c.id as candidato_id
-      from base b
-      left join public.municipios_sc m
-        on m.codigo_tse = b.codigo_tse
-        or normalize_txt(m.nome) = normalize_txt(b.municipio_nome)
-      left join public.candidatos c
-        on c.identificador_tse = b.identificador_tse
-        or (b.identificador_tse is null
-            and c.ano = b.ano and c.turno = b.turno and c.cargo = b.cargo
-            and c.numero = b.numero_candidato and c.sigla_partido = b.sigla_partido)
-      where m.id is not null and c.id is not null and b.votos is not null
-    )
-    select ano, turno, cargo, candidato_id, municipio_id, sum(votos)::integer as votos
-    from resolved
-    group by ano, turno, cargo, candidato_id, municipio_id
+    select
+      nullif(trim(vm.ano),'')::integer                                          as ano,
+      coalesce(nullif(trim(vm.turno),'')::integer, 1)                           as turno,
+      upper(trim(vm.cargo))                                                      as cargo,
+      c.id                                                                       as candidato_id,
+      m.id                                                                       as municipio_id,
+      sum(nullif(regexp_replace(coalesce(vm.votos,''),'[^0-9-]+','','g'),'')::integer) as votos
+    from staging.stg_votacao_municipio vm
+    join public.municipios_sc m
+      on m.codigo_tse = nullif(trim(vm.codigo_municipio_tse),'')::integer
+    join public.candidatos c
+      on c.identificador_tse = nullif(trim(vm.identificador_tse),'')
+    where coalesce(trim(vm.ano),'') = '2022'
+      and upper(coalesce(trim(vm.uf),'')) = 'SC'
+      and upper(coalesce(trim(vm.cargo),'')) in ('DEPUTADO ESTADUAL','DEPUTADO FEDERAL')
+    group by
+      nullif(trim(vm.ano),'')::integer,
+      coalesce(nullif(trim(vm.turno),'')::integer, 1),
+      upper(trim(vm.cargo)),
+      c.id, m.id
     on conflict (ano, turno, cargo, candidato_id, municipio_id) do update set votos = excluded.votos
   `);
 
@@ -176,8 +170,12 @@ async function main() {
         nullif(trim(pc.descricao),'')                                            as descricao,
         nullif(trim(pc.fornecedor_ou_doador),'')                                 as fornecedor_ou_doador,
         nullif(trim(pc.documento_fornecedor_ou_doador),'')                       as documento_fornecedor_ou_doador,
-        nullif(trim(pc.data_lancamento),'')::date                                as data_lancamento,
-        nullif(replace(replace(regexp_replace(coalesce(pc.valor,''),'[^0-9,.-]+','','g'),'.',''),',','.'),'')::numeric(16,2) as valor,
+        case when nullif(trim(pc.data_lancamento),'') ~ E'^\\d{2}/\\d{2}/\\d{4}$'
+             then to_date(trim(pc.data_lancamento), 'DD/MM/YYYY')
+             else null end                                                        as data_lancamento,
+        case when replace(replace(regexp_replace(coalesce(pc.valor,''),'[^0-9,.-]+','','g'),'.',''),',','.') ~ E'^-?[0-9]+(\\.[0-9]+)?$'
+             then replace(replace(regexp_replace(coalesce(pc.valor,''),'[^0-9,.-]+','','g'),'.',''),',','.')::numeric(16,2)
+             else null end                                                        as valor,
         nullif(trim(pc.fonte_recurso),'')                                        as fonte_recurso
       from staging.stg_prestacao_contas pc
       where coalesce(trim(pc.ano),'') = '2022'
