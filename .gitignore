@@ -1,0 +1,4 @@
+.env
+inputs/tse/
+inputs/tse_extracted/
+node_modules/

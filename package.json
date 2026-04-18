@@ -1,0 +1,27 @@
+{
+  "name": "mcp_br",
+  "version": "1.0.0",
+  "description": "Projeto pessoal de analise eleitoral de Santa Catarina nas eleicoes de 2022.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eleitorlibertario/politica.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eleitorlibertario/politica/issues"
+  },
+  "homepage": "https://github.com/eleitorlibertario/politica#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.103.3",
+    "pg": "^8.20.0"
+  }
+}
