@@ -29,11 +29,13 @@ Implementado:
 - schema SQL (staging + publico);
 - scripts de ingestao (download, extracao, staging, dimensoes, fatos);
 - conexao com Supabase/Postgres via Node.js + pg;
-- importacao de dados do TSE (candidatos, votacao por municipio, prestacao de contas).
+- importacao de dados do TSE (candidatos, votacao por municipio, prestacao de contas);
+- validacao de dados (005_validacoes_v2.sql);
+- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos).
 
 Pendente:
 
-- dashboard Metabase;
+- Dashboard 4 - Territorio (dominancia municipal);
 - MCP proprio.
 
 ## Escopo Inicial

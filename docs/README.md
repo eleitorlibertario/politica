@@ -186,9 +186,11 @@ Implementado:
 - scripts de ingestao (download, extracao, staging, dimensoes, fatos);
 - conexao com Supabase/Postgres via Node.js + pg;
 - importacao da planilha de regioes;
-- download e carga de dados do TSE.
+- download e carga de dados do TSE;
+- validacao de dados (005_validacoes_v2.sql);
+- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos).
 
 Pendente:
 
-- dashboard Metabase;
+- Dashboard 4 - Territorio (dominancia municipal);
 - MCP proprio.
