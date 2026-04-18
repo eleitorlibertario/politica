@@ -21,6 +21,23 @@ Dados necessarios:
 - situacao dos candidatos;
 - situacao de totalizacao.
 
+Links oficiais do portal:
+
+- https://dadosabertos.tse.jus.br/dataset/candidatos-2022
+- https://dadosabertos.tse.jus.br/dataset/resultados-2022
+- https://dadosabertos.tse.jus.br/dataset/dadosabertos-tse-jus-br-dataset-prestacao-de-contas-eleitorais-2022
+
+Links diretos de download usados no projeto:
+
+- `consulta_cand_2022.zip`:
+  - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip
+- `votacao_candidato_munzona_2022.zip`:
+  - https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip
+- `votacao_secao_2022_SC.zip`:
+  - https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_secao/votacao_secao_2022_SC.zip
+- `prestacao_de_contas_eleitorais_candidatos_2022.zip`:
+  - https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2022.zip
+
 ## Bases Necessarias
 
 ### Cadastro de Candidatos

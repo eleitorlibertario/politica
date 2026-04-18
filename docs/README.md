@@ -20,6 +20,9 @@ O projeto e pessoal, exploratorio e voltado a analisar performance de candidatos
 10. [recomendacao-stack-dashboard.md](recomendacao-stack-dashboard.md)
 11. [plano-implementacao.md](plano-implementacao.md)
 12. [decisoes-pendentes.md](decisoes-pendentes.md)
+13. [links-download-tse-2022.md](links-download-tse-2022.md)
+14. [guia-operacional-carga-sc-2022.md](guia-operacional-carga-sc-2022.md)
+15. [proximos-passos-retomada.md](proximos-passos-retomada.md)
 
 ## Conteudo
 
@@ -142,6 +145,36 @@ decisoes-pendentes.md
 ```
 
 Registra pontos ainda em aberto antes da implementacao.
+
+### Links de Download TSE
+
+Arquivo:
+
+```text
+links-download-tse-2022.md
+```
+
+Centraliza os links oficiais de download dos arquivos do TSE usados na ingestao.
+
+### Guia Operacional de Carga
+
+Arquivo:
+
+```text
+guia-operacional-carga-sc-2022.md
+```
+
+Guia pratico e direto com a sequencia completa: download, staging, carga e validacao.
+
+### Proximos Passos para Retomada
+
+Arquivo:
+
+```text
+proximos-passos-retomada.md
+```
+
+Checkpoint do estado atual e checklist objetivo para continuar o trabalho em outra sessao.
 
 ## Estado Atual
 

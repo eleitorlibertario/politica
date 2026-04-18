@@ -17,6 +17,8 @@ Comece por:
 - [docs/README.md](docs/README.md)
 - [docs/projeto-analise-eleitoral-sc-2022.md](docs/projeto-analise-eleitoral-sc-2022.md)
 - [docs/plano-implementacao.md](docs/plano-implementacao.md)
+- [docs/links-download-tse-2022.md](docs/links-download-tse-2022.md)
+- [docs/guia-operacional-carga-sc-2022.md](docs/guia-operacional-carga-sc-2022.md)
 
 ## Estado Atual
 
