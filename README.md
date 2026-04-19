@@ -31,11 +31,11 @@ Implementado:
 - conexao com Supabase/Postgres via Node.js + pg;
 - importacao de dados do TSE (candidatos, votacao por municipio, prestacao de contas);
 - validacao de dados (005_validacoes_v2.sql);
-- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos).
+- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos, Territorio);
+- filtros globais nos dashboards (cargo, partido, regiao, municipio).
 
 Pendente:
 
-- Dashboard 4 - Territorio (dominancia municipal);
 - MCP proprio.
 
 ## Escopo Inicial

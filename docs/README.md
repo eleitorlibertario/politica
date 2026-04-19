@@ -188,9 +188,9 @@ Implementado:
 - importacao da planilha de regioes;
 - download e carga de dados do TSE;
 - validacao de dados (005_validacoes_v2.sql);
-- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos).
+- dashboards Metabase Cloud (Visao Geral, Candidatos, Partidos, Territorio);
+- filtros globais nos dashboards (cargo, partido, regiao, municipio).
 
 Pendente:
 
-- Dashboard 4 - Territorio (dominancia municipal);
 - MCP proprio.
